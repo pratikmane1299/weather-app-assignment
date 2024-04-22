@@ -16,6 +16,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <title>Weather App</title>
+        <meta name="description" content="Weather app built with react" />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   );
