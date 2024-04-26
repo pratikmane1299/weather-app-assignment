@@ -11,7 +11,7 @@ type SummaryType = {
 export default function Summary({ summary }: { summary: SummaryType }) {
   return (
     <div className="mt-9 ">
-      <h6 className="mb-8 text-base font-semibold text-gray-900">Today's Highlights</h6>
+      <h6 className="mb-8 text-base font-semibold text-gray-900">{'Today\'s Highlights'}</h6>
       <ul className="flex flex-col sm:grid sm:grid-cols-2 lg:grid lg:grid-cols-3 gap-6">
         <li className="bg-white rounded-lg p-6">
           <div className="flex flex-col">

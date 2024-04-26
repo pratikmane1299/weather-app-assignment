@@ -4,7 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Weather App",
   description: "Weather app built with react",
-  viewport: ''
 };
 
 export default function RootLayout({
