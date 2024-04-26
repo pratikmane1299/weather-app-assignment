@@ -1,4 +1,8 @@
+import { Suspense, use } from "react";
 import { Poppins } from "next/font/google";
+
+import { getCityImageFromUnsplash, getCityLatLong, getWeatherInfo, getWeatherOneCall } from "@/api";
+
 import DurationTabs from "./components/tabs";
 import UnitSwitcher from "./components/unit-switcher";
 import Searchbox from "./components/searchbox";
@@ -7,80 +11,11 @@ import Hourly from "./components/hourly";
 import Summary from "./components/summary";
 import CityImage from "./components/city-image";
 import CurrentWeather from "./components/current-weather";
-import { Suspense, use } from "react";
-
-// const OPEN_WEATHER_API_KEY = 'ec5a48b6ce19e4da27fe34f3c3bd15f7';
-const OPEN_WEATHER_API_KEY = 'bf6d25276d71c592a1ce7c6cc14417a6';
-const UNSPLASH_API_KEY = '1Ot7wiOJwD97UtIbVc9qd5zRyOlvxYpdQzwdZa-TfWs';
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
 });
-
-async function myFetch({ url, method, params, headers }: { url: string, method: 'GET' | 'POST', params?: any; headers?: any; }) {
-  const res = await fetch(url, {
-    method,
-    headers,
-  });
-
-  if (!res.ok) {
-    return Promise.reject({ ok: res.ok, data: null, message: '', error: true });
-  }
-
-  const json = await res.json();
-
-  return { ok: res.ok, data: json }
-}
-
-function getOpenMapAPIURL(url: string, params: { [key: string]: number | string; }) {
-  const query = Object.keys(params || {}).map((key) => `${key}=${params[key]}`).join('&');
-  return `https://api.openweathermap.org${url}?appid=${OPEN_WEATHER_API_KEY}${query ? `&${query}` : ''}`;
-}
-
-function getUnsplashAPIURL({ url, params }: { url: string; params: { [key: string]: string | number } }) {
-  const query = Object.keys(params || {}).map((key) => `${key}=${params[key]}`).join('&');
-  return `https://api.unsplash.com${url}?client_id=${UNSPLASH_API_KEY}${query ? `&${query}` : ''}`;
-}
-
-async function getCityLatLong(city: string) {
-  const { data } = await myFetch({
-    url: getOpenMapAPIURL('/geo/1.0/direct', { q: city, country: 'in' }),
-    method: 'GET',
-  });
-
-  return {
-    lat: data?.[0]?.lat,
-    lon: data?.[0]?.lon,
-  };
-}
-
-async function getWeatherInfo({ lat, lon }: { lat: number, lon: number }) {
-  const { data } = await myFetch({
-    url: getOpenMapAPIURL('/data/2.5/weather', { lat, lon }),
-    method: 'GET',
-  });
-
-  return data;
-}
-
-async function getWeatherOneCall({ lat, lon }: { lat: number; lon: number; }) {
-  const { data } = await myFetch({
-    url: getOpenMapAPIURL(`/data/2.5/onecall`, { lat, lon }),
-    method: 'GET',
-  });
-
-  return data;
-}
-
-async function getCityImageFromUnsplash(city: string) {
-  const { data } = await myFetch({
-    url: getUnsplashAPIURL({ url: '/search/photos', params: { query: city, per_page: 5, } }),
-    method: 'GET',
-  });
-
-  return data;
-}
 
 export default async function Home({ searchParams }: { searchParams: { [key: string]: string | undefined; } }) {
   const duration = searchParams.duration ? searchParams.duration : 'week';
@@ -93,7 +28,6 @@ export default async function Home({ searchParams }: { searchParams: { [key: str
   const geoData = await getCityLatLong(city);
   lat = geoData.lat;
   lon = geoData.lon;
-
 
   return (
     <div style={poppins.style} className="max-w-full flex flex-col flex-1 h-full">
