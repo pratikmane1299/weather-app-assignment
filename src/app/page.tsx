@@ -1,80 +1,160 @@
-import Image from "next/image";
-import Link from "next/link";
+import { Poppins } from "next/font/google";
+import DurationTabs from "./components/tabs";
+import UnitSwitcher from "./components/unit-switcher";
+import Searchbox from "./components/searchbox";
+import Daily from "./components/weekly";
+import Hourly from "./components/hourly";
+import Summary from "./components/summary";
+import CityImage from "./components/city-image";
+import CurrentWeather from "./components/current-weather";
+import { Suspense, use } from "react";
 
-export default function Home() {
+// const OPEN_WEATHER_API_KEY = 'ec5a48b6ce19e4da27fe34f3c3bd15f7';
+const OPEN_WEATHER_API_KEY = 'bf6d25276d71c592a1ce7c6cc14417a6';
+const UNSPLASH_API_KEY = '1Ot7wiOJwD97UtIbVc9qd5zRyOlvxYpdQzwdZa-TfWs';
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+
+async function myFetch({ url, method, params, headers }: { url: string, method: 'GET' | 'POST', params?: any; headers?: any; }) {
+  const res = await fetch(url, {
+    method,
+    headers,
+  });
+
+  if (!res.ok) {
+    return Promise.reject({ ok: res.ok, data: null, message: '', error: true });
+  }
+
+  const json = await res.json();
+
+  return { ok: res.ok, data: json }
+}
+
+function getOpenMapAPIURL(url: string, params: { [key: string]: number | string; }) {
+  const query = Object.keys(params || {}).map((key) => `${key}=${params[key]}`).join('&');
+  return `https://api.openweathermap.org${url}?appid=${OPEN_WEATHER_API_KEY}${query ? `&${query}` : ''}`;
+}
+
+function getUnsplashAPIURL({ url, params }: { url: string; params: { [key: string]: string | number } }) {
+  const query = Object.keys(params || {}).map((key) => `${key}=${params[key]}`).join('&');
+  return `https://api.unsplash.com${url}?client_id=${UNSPLASH_API_KEY}${query ? `&${query}` : ''}`;
+}
+
+async function getCityLatLong(city: string) {
+  const { data } = await myFetch({
+    url: getOpenMapAPIURL('/geo/1.0/direct', { q: city, country: 'in' }),
+    method: 'GET',
+  });
+
+  return {
+    lat: data?.[0]?.lat,
+    lon: data?.[0]?.lon,
+  };
+}
+
+async function getWeatherInfo({ lat, lon }: { lat: number, lon: number }) {
+  const { data } = await myFetch({
+    url: getOpenMapAPIURL('/data/2.5/weather', { lat, lon }),
+    method: 'GET',
+  });
+
+  return data;
+}
+
+async function getWeatherOneCall({ lat, lon }: { lat: number; lon: number; }) {
+  const { data } = await myFetch({
+    url: getOpenMapAPIURL(`/data/2.5/onecall`, { lat, lon }),
+    method: 'GET',
+  });
+
+  return data;
+}
+
+async function getCityImageFromUnsplash(city: string) {
+  const { data } = await myFetch({
+    url: getUnsplashAPIURL({ url: '/search/photos', params: { query: city, per_page: 5, } }),
+    method: 'GET',
+  });
+
+  return data;
+}
+
+export default async function Home({ searchParams }: { searchParams: { [key: string]: string | undefined; } }) {
+  const duration = searchParams.duration ? searchParams.duration : 'week';
+  const unit = searchParams.unit ? searchParams.unit : 'celcius';
+  const city = searchParams.city ? searchParams.city : 'mumbai';
+
+  let lat = searchParams.lat ? +searchParams.lat : 0;
+  let lon = searchParams.lon ? +searchParams.lon : 0;
+
+  const geoData = await getCityLatLong(city);
+  lat = geoData.lat;
+  lon = geoData.lon;
+
+
   return (
-    <div className="flex flex-col flex-1 h-full lg:container lg:mx-auto">
-      <div className="w-full h-full grid grid-cols-[300px_1fr]">
-        <div className="bg-white w-full h-full border-r border-gray-200">
-          <div className="flex flex-col h-full p-12">
-            <div className="relative flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-              </svg>
+    <div style={poppins.style} className="max-w-full flex flex-col flex-1 h-full">
+      <div className="w-full h-full lg:grid lg:grid-cols-[400px_1fr]">
+        <div className="bg-white w-full h-full border-r border-gray-200 p-12">
+          <div className="flex flex-col justify-between  ">
+            <Searchbox />
 
-              <input placeholder="Search for places..." className="ml-3 flex-1 placeholder:text-gray-900" />
-
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            </div>
+            <Suspense fallback={<span>loading ... </span>}>
+              <CurrentWeatherAndCity lat={lat} lon={lon} city={city} unit={unit} />
+            </Suspense>
           </div>
         </div>
         <div className="bg-gray-100  w-full p-12">
           <div className="flex justify-between items-center">
-            <ul className="flex items-center space-x-4">
-              <li>
-                <Link href={'?filter=today'} className="text-base font-medium text-gray-400">Today</Link>
-              </li>
-              <li>
-                <Link href={'?filter=week'} className="text-base font-semibold text-gray-900 py-1.5 border-b-2 border-gray-900">Week</Link>
-              </li>
-            </ul>
+            <DurationTabs active={duration} />
             <div className="flex justify-between items-center space-x-5">
-              <ul className="flex items-center space-x-3">
-                <li>
-                  <Link href={"?unit=celcius"} className="p-2 w-7 h-7 flex justify-center items-center rounded-full bg-gray-900 text-white ">
-                    <sup>.</sup>{"C"}
-                  </Link>
-                </li>
-
-                <li className="p-2 w-7 h-7 flex justify-center items-center rounded-full bg-white text-gray-900 ">
-                  <Link href={"?unit=farhenheit"}>
-                    <sup>.</sup>F
-                  </Link>
-                </li>
-              </ul>
-
-              <button className="rounded-md w-8 h-8 bg-red-500"></button>
+              <UnitSwitcher currentUnit={unit} />
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 mt-14">
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-            <div className="w-full h-44 rounded-lg bg-white"></div>
-          </div>
-
-
-          <div className="mt-9 ">
-            <h6 className="mb-8 text-base font-semibold text-gray-900">Today's Highlights</h6>
-
-            <ul className="grid grid-cols-3 gap-6">
-              <li className="h-56 bg-white rounded-lg"></li>
-              <li className="h-56 bg-white rounded-lg"></li>
-              <li className="h-56 bg-white rounded-lg"></li>
-              <li className="h-56 bg-white rounded-lg"></li>
-              <li className="h-56 bg-white rounded-lg"></li>
-              <li className="h-56 bg-white rounded-lg"></li>
-            </ul>
-          </div>
+          <Suspense fallback={<span>loading...</span>}>
+            <WeatherForecast duration={duration} unit={unit} lat={lat} lon={lon} />
+          </Suspense>
         </div>
       </div>
-
     </div>
+  );
+}
+
+function WeatherForecast({ duration, unit, lat, lon }: { duration: string; unit: string; lat: number; lon: number }) {
+  const onecallData = use(getWeatherOneCall({ lat, lon }));
+
+  return (
+    <>
+      <div className="flex flex-row gap-2 mt-14 overflow-x-auto w-full whitespace-nowrap overflow-y-hidden">
+        {duration === 'today' ? <Hourly hourly={onecallData?.hourly} unit={unit} /> : <Daily daily={onecallData?.daily} unit={unit} />}
+      </div>
+
+      <Summary summary={{
+        uvi: onecallData?.current.uvi,
+        wind_speed: onecallData?.current.wind_speed,
+        sunrise: onecallData.current.sunrise,
+        sunset: onecallData.current.sunset,
+        humidity: onecallData.current.humidity,
+        pressure: onecallData.current.pressure,
+        visibility: onecallData.current.visibility,
+      }} />
+    </>
+  )
+}
+
+function CurrentWeatherAndCity({ lat, lon, city, unit }: { lat: number; lon: number; city: string; unit: string; }) {
+  const cityData = use(getCityImageFromUnsplash(city));
+  const currentWeather = use(getWeatherInfo({ lat, lon }));
+  const cityImage = Array.isArray(cityData?.results) && cityData?.results.length > 0 ? cityData?.results?.[0]?.urls?.regular : '';
+
+  return (
+    <>
+      <CurrentWeather unit={unit} currentWeather={currentWeather} />
+      <CityImage image={cityImage} city={city} />
+    </>
   );
 }
