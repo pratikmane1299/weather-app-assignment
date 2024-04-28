@@ -36,8 +36,12 @@ export default async function Home({ searchParams }: { searchParams: { [key: str
           <div className="flex flex-col justify-between  ">
             <Searchbox />
 
-            <Suspense fallback={<span>loading ... </span>}>
-              <CurrentWeatherAndCity lat={lat} lon={lon} city={city} unit={unit} />
+            <Suspense fallback={<CurrentWeatherSkeleton />}>
+              <CurrentWeather unit={unit} lat={lat} lon={lon} />
+            </Suspense>
+
+            <Suspense fallback={<CitySkeleton />}>
+              <CityImage city={city} />
             </Suspense>
           </div>
         </div>
@@ -49,7 +53,7 @@ export default async function Home({ searchParams }: { searchParams: { [key: str
             </div>
           </div>
 
-          <Suspense fallback={<span>loading...</span>}>
+          <Suspense fallback={<WeatherForecastSkeleton />}>
             <WeatherForecast duration={duration} unit={unit} lat={lat} lon={lon} />
           </Suspense>
         </div>
@@ -80,15 +84,78 @@ function WeatherForecast({ duration, unit, lat, lon }: { duration: string; unit:
   )
 }
 
-function CurrentWeatherAndCity({ lat, lon, city, unit }: { lat: number; lon: number; city: string; unit: string; }) {
-  const cityData = use(getCityImageFromUnsplash(city));
-  const currentWeather = use(getWeatherInfo({ lat, lon }));
-  const cityImage = Array.isArray(cityData?.results) && cityData?.results.length > 0 ? cityData?.results?.[0]?.urls?.regular : '';
-
+export function WeatherForecastSkeleton() {
   return (
-    <>
-      <CurrentWeather unit={unit} currentWeather={currentWeather} />
-      <CityImage image={cityImage} city={city} />
-    </>
+    <div className="flex flex-col mt-14 animate-pulse">
+      <div className="grid grid-cols-8 gap-2">
+        {new Array(8).fill('').map((_, idx) => (
+          <div key={idx} className="py-6 h-48 bg-white rounded-md flex flex-col items-center justify-between">
+            <span className="h-[20px] w-[50px] bg-gray-300 rounded-md"></span>
+            <span className="h-[50px] w-[50px] bg-gray-300 rounded-full"></span>
+            <span className="h-[20px] w-[80px] bg-gray-300 rounded-md"></span>
+          </div>
+        ))}
+      </div>
+
+
+      <div className="mt-9">
+        <h6 className="mb-8 text-base font-semibold text-gray-900">{'Today\'s Highlights'}</h6>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6">
+        {new Array(6).fill('').map((_, idx) => (
+          <div key={idx} className="h-[150px] bg-white rounded-lg p-6">
+            <span className="block h-[20px] w-[100px] bg-gray-300 rounded-md"></span>
+            <span className="mt-12 block h-[20px] w-[200px] bg-gray-300 rounded-md"></span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
+
+function CurrentWeatherSkeleton() {
+  return (
+    <div className="mt-13 flex flex-col items-center md:items-start animate-pulse">
+      <div className="py-8">
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[40px]"></span>
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[60px]"></span>
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[90px]"></span>
+
+
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[40px]"></span>
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[60px]"></span>
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[90px]"></span>
+
+
+        <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[40px]"></span>
+
+        <div className="flex items-center space-x-2">
+          <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[40px]"></span>
+          <span className="mb-5 bg-gray-300 rounded-md block h-[20px] w-[40px]"></span>
+        </div>
+
+      </div>
+
+      <div className="mb-5 border-t border-gray-100 w-full pt-7">
+        <span className="block h-[20px] w-[50px] bg-gray-300 rounded-md">
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CitySkeleton() {
+  return (
+    <div className="relative h-32 w-full rounded-lg bg-gray-300 animate-pulse">
+    </div>
+  );
+}
+
+// function CurrentWeatherAndCity({ lat, lon, city, unit }: { lat: number; lon: number; city: string; unit: string; }) {
+//
+//   return (
+//     <>
+//     </>
+//   );
+// }

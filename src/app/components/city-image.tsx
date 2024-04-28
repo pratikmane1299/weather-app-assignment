@@ -1,5 +1,10 @@
-import exp from "constants";
-export default function CityImage({ image, city }: { image: string; city: string }) {
+import { getCityImageFromUnsplash } from "@/api";
+import { use } from "react";
+export default function CityImage({ city }: { city: string }) {
+
+  const cityData = use(getCityImageFromUnsplash(city));
+  const image = Array.isArray(cityData?.results) && cityData?.results.length > 0 ? cityData?.results?.[0]?.urls?.regular : '';
+
   return (
     <div className="relative h-32 w-full rounded-lg overflow-hidden">
       <img alt={city} src={image} className="w-full h-full" />

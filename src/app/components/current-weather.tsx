@@ -1,4 +1,6 @@
+import { getWeatherInfo } from "@/api";
 import { convertTempToUnit } from "@/utils";
+import { use } from "react";
 
 type CurrentWeatherType = {
   dt: number;
@@ -11,7 +13,9 @@ type CurrentWeatherType = {
   },
 }
 
-export default function CurrentWeather({ unit, currentWeather }: { unit: string; currentWeather: CurrentWeatherType }) {
+export default function CurrentWeather({ unit, lat, lon }: { unit: string; lat: number; lon: number; }) {
+  const currentWeather = use(getWeatherInfo({ lat, lon }));
+
   return (
     <div className="mt-13 flex flex-col items-center md:items-start">
       <div className="py-8">

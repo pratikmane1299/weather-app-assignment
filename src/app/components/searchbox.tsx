@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function useDebounce(value: string, delay = 200) {
   const [debouncedVal, setDebouncedVal] = useState(value);
@@ -21,16 +21,23 @@ export default function Searchbox() {
   const router = useRouter();
   const [query, setQuery] = useState('');
 
+  const initialRender = useRef(true);
   const debouncedQuery = useDebounce(query, 200);
 
   useEffect(() => {
-    const params = new URLSearchParams({ city: debouncedQuery });
-    router.push(`?${params}`);
-  }, [debouncedQuery, router]);
+    initialRender.current = false;
+  }, []);
 
   useEffect(() => {
-    getLocation();
-  }, []);
+    if (!initialRender) {
+      const params = new URLSearchParams({ city: debouncedQuery });
+      router.push(`?${params}`);
+    }
+  }, [debouncedQuery]);
+
+  // useEffect(() => {
+  //   getLocation();
+  // }, []);
 
   function updateLocation(location: any) {
     const { coords } = location;
@@ -46,7 +53,6 @@ export default function Searchbox() {
   function getLocation() {
     if (navigator.geolocation) {
 
-      console.log("fn called", navigator.geolocation);
       navigator.geolocation.getCurrentPosition(updateLocation);
 
       navigator.geolocation.watchPosition(updateLocation);
