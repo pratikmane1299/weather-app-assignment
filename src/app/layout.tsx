@@ -1,10 +1,23 @@
-import type { Metadata } from "next";
+import type { ResolvingMetadata } from "next";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Weather App",
-  description: "Weather app built with react",
-};
+export async function generateMetadata({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }, parent: ResolvingMetadata) {
+  const city = searchParams?.['city'] ? searchParams?.['city'] : 'mumbai';
+  const duration = searchParams?.['duration'] ? searchParams?.['duration'] : 'week';
+
+  let durationInMeta = 'Weekly';
+
+  if (duration === 'today') {
+    durationInMeta = 'Today\'s';
+  }
+
+  let title = `${durationInMeta} weather forecast for ${city}`;
+
+  return {
+    title,
+    description: 'Weather app built with react',
+  };
+}
 
 export default function RootLayout({
   children,
