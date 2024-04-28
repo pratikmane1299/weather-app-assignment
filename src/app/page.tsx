@@ -152,10 +152,3 @@ function CitySkeleton() {
   );
 }
 
-// function CurrentWeatherAndCity({ lat, lon, city, unit }: { lat: number; lon: number; city: string; unit: string; }) {
-//
-//   return (
-//     <>
-//     </>
-//   );
-// }
