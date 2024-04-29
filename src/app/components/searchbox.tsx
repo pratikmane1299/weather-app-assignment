@@ -29,11 +29,11 @@ export default function Searchbox() {
   }, []);
 
   useEffect(() => {
-    if (!initialRender) {
+    if (!initialRender.current) {
       const params = new URLSearchParams({ city: debouncedQuery });
       router.push(`?${params}`);
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, initialRender, router]);
 
   // useEffect(() => {
   //   getLocation();

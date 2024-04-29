@@ -1,4 +1,6 @@
+'use client';
 import { convertTempToUnit } from "@/utils";
+import { useAppState } from "../contexts/app.context";
 
 type DailyWeatherType = {
   dt: number;
@@ -13,7 +15,10 @@ type DailyWeatherType = {
   }[];
 }
 
-export default function Daily({ daily, unit }: { daily: DailyWeatherType[]; unit: string; }) {
+export default function Daily({ daily }: { daily: DailyWeatherType[] }) {
+
+  const { state } = useAppState();
+
   return (
     // flex flex-row gap-2
     <ul className=" relative overflow-x-auto overflow-y-hidden w-full whitespace-nowrap flex lg:w-[calc(100vw-496px)]">
@@ -27,11 +32,11 @@ export default function Daily({ daily, unit }: { daily: DailyWeatherType[]; unit
 
             <div className="flex items-center space-x-2">
               <span className="text-base font-normal text-gray-700">
-                {`${convertTempToUnit(dailyWeather.temp.max, unit)}`}
+                {`${convertTempToUnit(dailyWeather.temp.max, state.unit)}`}
                 <sup className="text-xs">o</sup>
               </span>
               <span className="text-base font-normal text-gray-400">
-                {convertTempToUnit(dailyWeather.temp.max, unit)}
+                {convertTempToUnit(dailyWeather.temp.max, state.unit)}
                 <sup className="text-xs">o</sup>
               </span>
             </div>
